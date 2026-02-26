@@ -11,6 +11,31 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme._24768_midterm_bank">
+
+        <activity
+            android:name=".DashboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".BrokenActivityMissingSuper"
+            android:exported="false" />
+
+        <activity
+            android:name=".FixedActivityMissingSuper"
+            android:exported="false" />
+
+        <activity
+            android:name=".BrokenActivityFindViewBeforeSetContent"
+            android:exported="false" />
+
+        <activity
+            android:name=".FixedActivityFindViewBeforeSetContent"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
