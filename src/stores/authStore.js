@@ -163,18 +163,50 @@ export const useAuthStore = defineStore('auth', {
             return users.find(u => u.email.toLowerCase() === email.toLowerCase().trim()) || null
         },
 
-        // Reset password after email verification
-        resetPassword(email, newPassword) {
+        // Generate a password reset simulation token
+        generateResetToken(email) {
+            const users = getUsers()
+            const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim())
+            if (!user) return null
+
+            const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+            const tokens = JSON.parse(localStorage.getItem('ems_reset_tokens') || '{}')
+            // Token expires in 15 minutes
+            tokens[token] = { email: user.email, expires: Date.now() + 15 * 60000 }
+            localStorage.setItem('ems_reset_tokens', JSON.stringify(tokens))
+
+            return token
+        },
+
+        // Reset password using the token sent in the "email"
+        resetPasswordWithToken(token, newPassword) {
             if (newPassword.length < 6) {
                 return { ok: false, error: 'New password must be at least 6 characters.' }
             }
+
+            const tokens = JSON.parse(localStorage.getItem('ems_reset_tokens') || '{}')
+            const tokenData = tokens[token]
+
+            if (!tokenData) return { ok: false, error: 'Invalid or missing reset token.' }
+            if (Date.now() > tokenData.expires) {
+                delete tokens[token]
+                localStorage.setItem('ems_reset_tokens', JSON.stringify(tokens))
+                return { ok: false, error: 'This reset link has expired.' }
+            }
+
             const users = getUsers()
-            const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase().trim())
+            const idx = users.findIndex(u => u.email.toLowerCase() === tokenData.email)
             if (idx === -1) return { ok: false, error: 'Account not found.' }
+
             users[idx].password = newPassword
             users[idx].failedAttempts = 0
             users[idx].locked = false
             saveUsers(users)
+
+            // Consume token
+            delete tokens[token]
+            localStorage.setItem('ems_reset_tokens', JSON.stringify(tokens))
+
             return { ok: true }
         }
     }

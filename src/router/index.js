@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import SignIn from '../views/SignIn.vue'
+import ResetPassword from '../views/ResetPassword.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Pending from '../views/Pending.vue'
 import Successful from '../views/Successful.vue'
+import TotalMoney from '../views/TotalMoney.vue'
 import CustomerView from '../views/CustomerView.vue'
 
 const routes = [
@@ -11,6 +13,12 @@ const routes = [
         path: '/login',
         name: 'SignIn',
         component: SignIn,
+        meta: { guest: true }
+    },
+    {
+        path: '/reset-password',
+        name: 'ResetPassword',
+        component: ResetPassword,
         meta: { guest: true }
     },
     // Admin routes
@@ -30,6 +38,12 @@ const routes = [
         path: '/admin/successful',
         name: 'Successful',
         component: Successful,
+        meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+        path: '/admin/total-money',
+        name: 'TotalMoney',
+        component: TotalMoney,
         meta: { requiresAuth: true, role: 'admin' }
     },
     // Customer route
