@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProductStore } from '../stores/productStore'
 import { useAuthStore } from '../stores/authStore'
 import html2pdf from 'html2pdf.js'
@@ -21,6 +21,15 @@ const imagePreview = ref('')
 function rwf(n) {
   return 'RWF ' + Number(n).toLocaleString()
 }
+
+// Table Filter Logic
+const activeFilter = ref('all') // 'all', 'pending', 'sold'
+
+const filteredProducts = computed(() => {
+  if (activeFilter.value === 'pending') return store.pendingProducts
+  if (activeFilter.value === 'sold') return store.successfulProducts
+  return store.products
+})
 
 // Prepare the modal for adding a new product (clears previous data)
 function openAdd() {
@@ -219,8 +228,15 @@ async function printReceipt(product) {
       <div class="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
-            <h2 class="font-bold text-slate-700 text-base">All Products</h2>
-            <p class="text-slate-400 text-xs mt-0.5">{{ store.products.length }} items total</p>
+            <div class="flex items-center gap-3">
+              <h2 class="font-bold text-slate-700 text-base">Products</h2>
+              <div class="flex bg-gray-100 p-1 rounded-lg">
+                <button @click="activeFilter = 'all'" :class="activeFilter === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">All</button>
+                <button @click="activeFilter = 'pending'" :class="activeFilter === 'pending' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">Pending</button>
+                <button @click="activeFilter = 'sold'" :class="activeFilter === 'sold' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">Sold</button>
+              </div>
+            </div>
+            <p class="text-slate-400 text-xs mt-1">{{ filteredProducts.length }} items shown</p>
           </div>
           <button @click="openAdd"
             :disabled="authStore.isManager && !authStore.user?.approved"
@@ -232,8 +248,8 @@ async function printReceipt(product) {
           </button>
         </div>
 
-        <div v-if="store.products.length === 0" class="flex flex-col items-center justify-center py-12 text-slate-400">
-          <p class="text-sm">No products yet. Click "Add Item" to get started.</p>
+        <div v-if="filteredProducts.length === 0" class="flex flex-col items-center justify-center py-12 text-slate-400">
+          <p class="text-sm">No products found for this filter.</p>
         </div>
 
         <div v-else class="overflow-x-auto">
@@ -250,7 +266,7 @@ async function printReceipt(product) {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="product in store.products" :key="product.id" class="hover:bg-gray-50 transition">
+              <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-gray-50 transition">
                 <td class="px-5 py-3">
                   <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center">
                     <img :src="product.image || 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800'" class="w-full h-full object-cover" :alt="product.name || 'Electronic item'"/>
