@@ -304,14 +304,14 @@ function switchTab(tab) {
           </div>
 
           <div>
-            <label for="regPassword" class="sr-only">Password (min 6 characters)</label>
+            <label for="regPassword" class="sr-only">Password (min 10 characters)</label>
             <div class="relative group">
               <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 group-focus-within:text-cyan-400 transition-colors" aria-hidden="true">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
               </span>
-              <input id="regPassword" v-model="regPassword" :type="showRegPass ? 'text' : 'password'" placeholder="Password (min 6)" required
+              <input id="regPassword" v-model="regPassword" :type="showRegPass ? 'text' : 'password'" placeholder="Password (min 10)" required
                 class="w-full pl-9 pr-10 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"/>
               <button type="button" @click="showRegPass = !showRegPass" :aria-label="showRegPass ? 'Hide password' : 'Show password'" class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-white focus:outline-none focus:text-cyan-400 focus:ring-2 focus:ring-cyan-500 rounded-md transition-colors">
                 <svg v-if="!showRegPass" class="w-4 h-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">

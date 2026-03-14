@@ -49,12 +49,16 @@ export const useAuthStore = defineStore('auth', {
                 this.registerError = 'All fields are required.'
                 return false
             }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                this.registerError = 'Please enter a valid email address.'
+            if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+                this.registerError = 'Name must contain letters and spaces only.'
                 return false
             }
-            if (password.length < 6) {
-                this.registerError = 'Password must be at least 6 characters.'
+            if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+                this.registerError = 'Please enter a valid email address (e.g., user@example.com).'
+                return false
+            }
+            if (password.length < 10 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/.test(password)) {
+                this.registerError = 'Password must be at least 10 characters and include a number, uppercase, lowercase, and special character.'
                 return false
             }
 
@@ -87,7 +91,7 @@ export const useAuthStore = defineStore('auth', {
                 this.loginError = 'Email and password are required.'
                 return false
             }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
                 this.loginError = 'Please enter a valid email address.'
                 return false
             }
@@ -230,8 +234,8 @@ export const useAuthStore = defineStore('auth', {
 
         // Reset password using the token sent in the "email"
         resetPasswordWithToken(token, newPassword) {
-            if (newPassword.length < 6) {
-                return { ok: false, error: 'New password must be at least 6 characters.' }
+            if (newPassword.length < 10 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/.test(newPassword)) {
+                return { ok: false, error: 'Password must be at least 10 characters and include a number, uppercase, lowercase, and special character.' }
             }
 
             const tokens = JSON.parse(localStorage.getItem('ems_reset_tokens') || '{}')
