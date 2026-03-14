@@ -129,48 +129,9 @@ export const useAuthStore = defineStore('auth', {
                 return false
             }
 
-            // Success – reset failed attempts and generate OTP for MFA
+            // Success – reset failed attempts and log the user in directly
             user.failedAttempts = 0
             saveUsers(users)
-
-            // Generate a secure 6-digit OTP
-            const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
-            const mfaData = { email: user.email, otp: otpCode, expires: Date.now() + 5 * 60000 }
-            localStorage.setItem('ems_mfa_pending', JSON.stringify(mfaData))
-
-            return { requiresMFA: true, simulatedOTP: otpCode }
-        },
-
-        verifyOTP(email, otpStr) {
-            this.clearMessages()
-            const mfaStr = localStorage.getItem('ems_mfa_pending')
-            if (!mfaStr) {
-                this.loginError = 'OTP session expired or invalid.'
-                return false
-            }
-            const mfaData = JSON.parse(mfaStr)
-            
-            if (mfaData.email.toLowerCase() !== email.toLowerCase()) {
-                this.loginError = 'Invalid email for OTP.'
-                return false
-            }
-            
-            if (Date.now() > mfaData.expires) {
-                this.loginError = 'OTP has expired. Please log in again.'
-                localStorage.removeItem('ems_mfa_pending')
-                return false
-            }
-            
-            if (mfaData.otp !== otpStr) {
-                this.loginError = 'Incorrect OTP code.'
-                return false
-            }
-
-            // OTP is valid! Find the user and create session
-            const users = getUsers()
-            const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim())
-            
-            localStorage.removeItem('ems_mfa_pending')
 
             const sessionUser = { 
                 id: user.id, 
@@ -181,6 +142,7 @@ export const useAuthStore = defineStore('auth', {
             }
             this.user = sessionUser
             localStorage.setItem('ems_current_user', JSON.stringify(sessionUser))
+            
             return true
         },
 

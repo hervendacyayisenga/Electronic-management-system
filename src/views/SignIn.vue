@@ -16,10 +16,8 @@ const loginEmail = ref('')
 const loginPassword = ref('')
 const loginLoading = ref(false)
 
-// MFA state variables
+// MFA state variables (deprecated based on user request)
 const mfaStep = ref(false)
-const mfaOtp = ref('')
-const mfaSimulatedOTP = ref('')
 
 const regName = ref('')
 const regEmail = ref('')
@@ -42,7 +40,6 @@ const showNewPass = ref(false)
 // Clear any stale errors from previous sessions when the component mounts
 authStore.clearMessages()
 
-// Submits credentials to the store
 async function handleLogin() {
   loginLoading.value = true
   await new Promise(r => setTimeout(r, 400)) // Simulate network latency
@@ -50,47 +47,9 @@ async function handleLogin() {
   const result = authStore.login(loginEmail.value, loginPassword.value)
   
   loginLoading.value = false
-  if (result && result.requiresMFA) {
-    // Show MFA Step and the simulated OTP
-    mfaStep.value = true
-    mfaSimulatedOTP.value = result.simulatedOTP
-  } else if (result === true) {
+  
+  if (result === true) {
     // Navigate user based on their newly-authenticated role
-    if (authStore.isSuperAdmin) {
-      router.push({ name: 'Accounts' })
-    } else if (authStore.isManager) {
-      router.push({ name: 'Dashboard' })
-    } else {
-      router.push({ name: 'CustomerView' })
-    }
-  }
-}
-
-// Optional TTS feature for accessibility
-function spellOTP() {
-  if (!window.speechSynthesis) {
-    authStore.loginError = 'Your browser does not support text-to-speech audio.'
-    return
-  }
-  
-  // Format the OTP to be read character by character (e.g. "1, 2, 3")
-  const textToSpeak = mfaSimulatedOTP.value.split('').join(', ')
-  const utterance = new SpeechSynthesisUtterance("Your verification code is: " + textToSpeak)
-  
-  // Adjust speaking rate to be clear and deliberate
-  utterance.rate = 0.85
-  window.speechSynthesis.speak(utterance)
-}
-
-// Verifies the OTP and finishes the login process
-async function handleVerifyOTP() {
-  authStore.clearMessages()
-  loginLoading.value = true
-  await new Promise(r => setTimeout(r, 400)) // Simulate network latency
-
-  const ok = authStore.verifyOTP(loginEmail.value, mfaOtp.value)
-  loginLoading.value = false
-  if (ok) {
     if (authStore.isSuperAdmin) {
       router.push({ name: 'Accounts' })
     } else if (authStore.isManager) {
@@ -156,7 +115,6 @@ function switchTab(tab) {
   activeTab.value = tab
   forgotStep.value = 1
   mfaStep.value = false
-  mfaOtp.value = ''
   generatedResetLink.value = ''
   authStore.clearMessages()
 }
@@ -203,9 +161,9 @@ function switchTab(tab) {
         </div>
 
         <!-- LOGIN FORM -->
-        <form v-if="activeTab === 'login'" aria-label="Login Form" @submit.prevent="mfaStep ? handleVerifyOTP() : handleLogin()" class="px-6 py-6 space-y-5">
+        <form v-if="activeTab === 'login'" aria-label="Login Form" @submit.prevent="handleLogin()" class="px-6 py-6 space-y-5">
           
-          <div v-if="!mfaStep" class="space-y-5">
+          <div class="space-y-5">
             <fieldset class="flex gap-3 border-none p-0 m-0 w-full" aria-label="Select Role">
               <button type="button" @click="loginRole = 'customer'"
                 :aria-pressed="loginRole === 'customer'"
@@ -261,39 +219,14 @@ function switchTab(tab) {
             </div>
           </div>
           
-          <!-- MFA Step Section -->
-            <div class="space-y-5">
-              <div class="bg-cyan-900/40 border border-cyan-500/30 text-cyan-200 p-5 rounded-xl text-sm backdrop-blur-md">
-                <p class="font-bold mb-2 flex items-center gap-2 text-cyan-400">
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                  </svg>
-                  Two-Factor Authentication
-                </p>
-                <p class="text-cyan-100/70 mb-3">An email with a secure One-Time Password has been dispatched to <strong>{{ loginEmail }}</strong>.</p>
-                
-                <div class="bg-black/30 w-full p-3 text-center rounded-lg border border-cyan-500/20 relative">
-                  <span class="text-xs text-cyan-400 uppercase tracking-widest block mb-1">Simulated OTP Delivery:</span>
-                  <div class="flex items-center justify-center gap-4">
-                    <strong class="text-white text-3xl tracking-[0.2em] font-mono">{{ mfaSimulatedOTP }}</strong>
-                    <button type="button" @click="spellOTP" aria-label="Listen to verification code" title="Hear OTP"
-                      class="p-2 rounded-full bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-cyan-400 group">
-                      <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <label for="mfaOtp" class="sr-only">Enter OTP</label>
-                <div class="relative group">
-                  <input id="mfaOtp" v-model="mfaOtp" type="text" placeholder="Enter 6-digit OTP" required maxlength="6"
-                    class="w-full px-4 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-center text-xl tracking-widest text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all font-mono"/>
-                </div>
-              </div>
-            </div>
+          <button type="submit" :disabled="loginLoading"
+            class="w-full flex items-center justify-center py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-base font-bold transition-all shadow-[0_0_15px_rgba(8,145,178,0.4)] disabled:opacity-50 disabled:shadow-none focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-[#0B0F19]">
+            <svg v-if="loginLoading" class="animate-spin -ml-1 mr-2 w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Sign In
+          </button>
 
           <div aria-live="polite" class="min-h-[20px]">
             <p v-if="authStore.loginError" class="text-red-400 text-xs px-1" role="alert">{{ authStore.loginError }}</p>
