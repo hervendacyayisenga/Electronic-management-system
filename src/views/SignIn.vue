@@ -220,25 +220,13 @@ function switchTab(tab) {
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Sign In To System
+            Sign <span class="text-emerald-400 ml-1">as Admin</span>
           </button>
 
           <div aria-live="polite" class="min-h-[20px]">
             <p v-if="authStore.loginError" class="text-red-400 text-xs px-1" role="alert">{{ authStore.loginError }}</p>
             <p v-if="authStore.registerSuccess" class="text-emerald-400 text-xs px-1 font-medium" role="status">{{ authStore.registerSuccess }}</p>
           </div>
-
-          <button type="submit" :disabled="loginLoading"
-            :aria-busy="loginLoading"
-            class="w-full py-3 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] disabled:opacity-50 disabled:shadow-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0B0F19]">
-            <span v-if="loginLoading">Authenticating...</span>
-            <span v-else-if="mfaStep">Verify Secure OTP</span>
-            <span v-else>Sign In To System</span>
-          </button>
-          
-          <button v-if="mfaStep" type="button" @click="mfaStep = false; mfaOtp = ''; authStore.clearMessages()" class="mt-4 w-full py-2 bg-transparent text-slate-400 hover:text-slate-200 text-sm font-semibold transition-colors focus:outline-none">
-            Back to Application Login
-          </button>
         </form>
 
         <!-- REGISTER FORM -->
