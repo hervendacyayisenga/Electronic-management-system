@@ -55,8 +55,14 @@ async function handleLogin() {
     mfaStep.value = true
     mfaSimulatedOTP.value = result.simulatedOTP
   } else if (result === true) {
-    // Navigate user based on their newly-authenticated role (fallback)
-    router.push(authStore.isAdmin ? { name: 'Dashboard' } : { name: 'CustomerView' })
+    // Navigate user based on their newly-authenticated role
+    if (authStore.isSuperAdmin) {
+      router.push({ name: 'Accounts' })
+    } else if (authStore.isManager) {
+      router.push({ name: 'Dashboard' })
+    } else {
+      router.push({ name: 'CustomerView' })
+    }
   }
 }
 
@@ -69,8 +75,21 @@ async function handleVerifyOTP() {
   const ok = authStore.verifyOTP(loginEmail.value, mfaOtp.value)
   loginLoading.value = false
   if (ok) {
-    router.push(authStore.isAdmin ? { name: 'Dashboard' } : { name: 'CustomerView' })
+    if (authStore.isSuperAdmin) {
+      router.push({ name: 'Accounts' })
+    } else if (authStore.isManager) {
+      router.push({ name: 'Dashboard' })
+    } else {
+      router.push({ name: 'CustomerView' })
+    }
   }
+}
+
+// Auto-fill and login as Super Admin
+async function loginAsAdmin() {
+  loginEmail.value = 'adminems@gmail.com'
+  loginPassword.value = 'WebTech123@'
+  await handleLogin()
 }
 
 // Handles registering a new user account
@@ -216,8 +235,13 @@ function switchTab(tab) {
               </div>
             </div>
 
-            <div class="flex justify-end">
+            <div class="flex flex-col items-end gap-3 mt-2">
               <button @click="switchTab('forgot')" type="button" class="text-xs text-cyan-400 hover:text-cyan-300 hover:underline focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded px-1 transition-colors">Forgot password?</button>
+              
+              <button @click="loginAsAdmin" type="button" class="text-xs text-emerald-400 border border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1 transition-colors flex items-center gap-1 font-semibold group w-fit">
+                <svg class="w-3 h-3 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Sign In As Admin
+              </button>
             </div>
           </div>
           
