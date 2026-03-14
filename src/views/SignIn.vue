@@ -66,6 +66,22 @@ async function handleLogin() {
   }
 }
 
+// Optional TTS feature for accessibility
+function spellOTP() {
+  if (!window.speechSynthesis) {
+    authStore.loginError = 'Your browser does not support text-to-speech audio.'
+    return
+  }
+  
+  // Format the OTP to be read character by character (e.g. "1, 2, 3")
+  const textToSpeak = mfaSimulatedOTP.value.split('').join(', ')
+  const utterance = new SpeechSynthesisUtterance("Your verification code is: " + textToSpeak)
+  
+  // Adjust speaking rate to be clear and deliberate
+  utterance.rate = 0.85
+  window.speechSynthesis.speak(utterance)
+}
+
 // Verifies the OTP and finishes the login process
 async function handleVerifyOTP() {
   authStore.clearMessages()
@@ -246,29 +262,38 @@ function switchTab(tab) {
           </div>
           
           <!-- MFA Step Section -->
-          <div v-else class="space-y-5">
-            <div class="bg-cyan-900/40 border border-cyan-500/30 text-cyan-200 p-5 rounded-xl text-sm backdrop-blur-md">
-              <p class="font-bold mb-2 flex items-center gap-2 text-cyan-400">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                Two-Factor Authentication
-              </p>
-              <p class="text-cyan-100/70 mb-3">An email with a secure One-Time Password has been dispatched to <strong>{{ loginEmail }}</strong>.</p>
-              <div class="bg-black/30 w-full p-2 text-center rounded-lg border border-cyan-500/20">
-                <span class="text-xs text-cyan-400 uppercase tracking-widest block mb-1">Simulated OTP Delivery:</span>
-                <strong class="text-white text-2xl tracking-[0.2em] font-mono">{{ mfaSimulatedOTP }}</strong>
+            <div class="space-y-5">
+              <div class="bg-cyan-900/40 border border-cyan-500/30 text-cyan-200 p-5 rounded-xl text-sm backdrop-blur-md">
+                <p class="font-bold mb-2 flex items-center gap-2 text-cyan-400">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                  Two-Factor Authentication
+                </p>
+                <p class="text-cyan-100/70 mb-3">An email with a secure One-Time Password has been dispatched to <strong>{{ loginEmail }}</strong>.</p>
+                
+                <div class="bg-black/30 w-full p-3 text-center rounded-lg border border-cyan-500/20 relative">
+                  <span class="text-xs text-cyan-400 uppercase tracking-widest block mb-1">Simulated OTP Delivery:</span>
+                  <div class="flex items-center justify-center gap-4">
+                    <strong class="text-white text-3xl tracking-[0.2em] font-mono">{{ mfaSimulatedOTP }}</strong>
+                    <button type="button" @click="spellOTP" aria-label="Listen to verification code" title="Hear OTP"
+                      class="p-2 rounded-full bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-cyan-400 group">
+                      <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label for="mfaOtp" class="sr-only">Enter OTP</label>
+                <div class="relative group">
+                  <input id="mfaOtp" v-model="mfaOtp" type="text" placeholder="Enter 6-digit OTP" required maxlength="6"
+                    class="w-full px-4 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-center text-xl tracking-widest text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all font-mono"/>
+                </div>
               </div>
             </div>
-            
-            <div>
-              <label for="mfaOtp" class="sr-only">Enter OTP</label>
-              <div class="relative group">
-                <input id="mfaOtp" v-model="mfaOtp" type="text" placeholder="Enter 6-digit OTP" required maxlength="6"
-                  class="w-full px-4 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-center text-xl tracking-widest text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all font-mono"/>
-              </div>
-            </div>
-          </div>
 
           <div aria-live="polite" class="min-h-[20px]">
             <p v-if="authStore.loginError" class="text-red-400 text-xs px-1" role="alert">{{ authStore.loginError }}</p>
