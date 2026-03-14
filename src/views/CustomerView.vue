@@ -180,11 +180,7 @@ function logout() {
               <!-- Product summary -->
               <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-xl border border-orange-100">
                 <div class="w-12 h-12 rounded-lg bg-orange-100 border border-orange-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  <img v-if="selectedProduct?.image" :src="selectedProduct.image" class="w-full h-full object-cover" alt=""/>
-                  <svg v-else class="w-6 h-6 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                  </svg>
+                  <img :src="selectedProduct?.image || 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800'" class="w-full h-full object-cover" alt="Product"/>
                 </div>
                 <div>
                   <p class="font-semibold text-slate-700 text-sm">{{ selectedProduct?.name }}</p>
