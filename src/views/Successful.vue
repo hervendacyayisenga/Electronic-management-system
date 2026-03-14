@@ -2,11 +2,16 @@
 import { computed, onMounted } from 'vue'
 import { useProductStore } from '../stores/productStore'
 
+// Connect to global products state
 const store = useProductStore()
+
+// Bootstrap inventory data
 onMounted(() => store.loadProducts())
 
+// Formats a number consistently into RWF text format
 function rwf(n) { return 'RWF ' + Number(n).toLocaleString() }
 
+// Use a computed property so the total updates reactively whenever a new sale is made
 const totalRevenue = computed(() => rwf(store.totalMoney))
 </script>
 

@@ -4,19 +4,25 @@ import { useProductStore } from '../stores/productStore'
 import { useAuthStore } from '../stores/authStore'
 import html2pdf from 'html2pdf.js'
 
+// Connect to global stores
 const store = useProductStore()
 const authStore = useAuthStore()
+
+// Load inventory from localStorage when the dashboard opens
 onMounted(() => store.loadProducts())
 
+// Local UI state for the Add/Edit Product modal
 const showModal = ref(false)
-const editingProduct = ref(null)
+const editingProduct = ref(null) // Holds the product being edited, or null if adding a new one
 const form = ref({ name: '', description: '', price: '', quantity: '', image: '', paid: false })
 const imagePreview = ref('')
 
+// Utility function to format numbers as Rwandan Francs
 function rwf(n) {
   return 'RWF ' + Number(n).toLocaleString()
 }
 
+// Prepare the modal for adding a new product (clears previous data)
 function openAdd() {
   editingProduct.value = null
   form.value = { name: '', description: '', price: '', quantity: '', image: '', paid: false }
@@ -24,6 +30,7 @@ function openAdd() {
   showModal.value = true
 }
 
+// Prepare the modal for editing an existing product (populates data)
 function openEdit(product) {
   editingProduct.value = product
   form.value = {
@@ -34,43 +41,53 @@ function openEdit(product) {
     image: product.image || '',
     paid: product.paid
   }
-  imagePreview.value = product.image || ''
+  imagePreview.value = product.image || '' // Load the existing image into the preview thumbnail
   showModal.value = true
 }
 
+// Safely close and reset the modal
 function closeModal() {
   showModal.value = false
   editingProduct.value = null
 }
 
+// Handle file uploads for product images by converting them to a base64 Data URL
 function onImageChange(e) {
   const file = e.target.files[0]
   if (!file) return
   const reader = new FileReader()
   reader.onload = ev => {
     imagePreview.value = ev.target.result
-    form.value.image = ev.target.result
+    form.value.image = ev.target.result // Store the base64 string
   }
   reader.readAsDataURL(file)
 }
 
+// Handle the modal's save button click
 async function submitForm() {
-  if (!form.value.name || !form.value.price || !form.value.quantity) return
+  if (!form.value.name || !form.value.price || !form.value.quantity) return // Basic validation
+  
   if (editingProduct.value) {
+    // If we're editing an existing product, pass the updated data to the store
     await store.updateProduct({ ...editingProduct.value, ...form.value })
   } else {
+    // Otherwise, it's a completely new product
     await store.addProduct({ ...form.value })
   }
   closeModal()
 }
 
+// Remove the item from inventory completely
 async function deleteProduct(id) {
   if (confirm('Delete this product?')) await store.deleteProduct(id)
 }
 
+// Mark an item as sold (switches its category)
 async function markPaid(id) {
   await store.payProduct(id)
 }
+
+// Generate PDF receipt for a sold item
 async function printReceipt(product) {
   const element = document.createElement('div');
   element.innerHTML = `
@@ -420,5 +437,11 @@ async function printReceipt(product) {
 <style scoped>
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
-.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 </style>

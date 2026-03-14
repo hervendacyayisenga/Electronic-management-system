@@ -1,39 +1,49 @@
 import { defineStore } from 'pinia'
 
+// Maximum number of allowed incorrect password attempts before the account is locked
 const MAX_ATTEMPTS = 3
 
+// Helper function to load the array of users from the browser's localStorage
 function getUsers() {
     return JSON.parse(localStorage.getItem('ems_users') || '[]')
 }
 
+// Helper function to save the array of users back to the browser's localStorage
 function saveUsers(users) {
     localStorage.setItem('ems_users', JSON.stringify(users))
 }
 
+// Define the Pinia store for Authentication
 export const useAuthStore = defineStore('auth', {
     state: () => ({
+        // Try to load an existing active session from localStorage when the app starts
         user: JSON.parse(localStorage.getItem('ems_current_user') || 'null'),
+        
+        // Strings for displaying UI messages to the user during login/registration
         loginError: '',
         registerError: '',
         registerSuccess: ''
     }),
 
     getters: {
+        // Quick boolean checks for the current user's role and authentication status
         isAdmin: (state) => state.user?.role === 'admin',
         isCustomer: (state) => state.user?.role === 'customer',
         isAuthenticated: (state) => !!state.user
     },
 
     actions: {
+        // Clear old error messages when starting a new action
         clearMessages() {
             this.loginError = ''
             this.registerError = ''
             this.registerSuccess = ''
         },
 
+        // Attempt to create a new user account
         register(name, email, password, role = 'customer') {
             this.clearMessages()
-            const users = getUsers()
+            const users = getUsers() // Fetch existing database of users
 
             if (!name.trim() || !email.trim() || !password.trim()) {
                 this.registerError = 'All fields are required.'
@@ -111,34 +121,36 @@ export const useAuthStore = defineStore('auth', {
                 return false
             }
 
-            // Success – reset failed attempts
+            // Success – reset failed attempts and log the user in
             user.failedAttempts = 0
             saveUsers(users)
 
+            // Create a session object (we don't want to store the plain password in the session)
             const sessionUser = { id: user.id, name: user.name, email: user.email, role: user.role }
             this.user = sessionUser
             localStorage.setItem('ems_current_user', JSON.stringify(sessionUser))
             return true
         },
 
+        // Log the current user out by clearing the session from state and localStorage
         logout() {
             this.user = null
             this.clearMessages()
             localStorage.removeItem('ems_current_user')
         },
 
-        // Admin utility – unlock a user
+        // Admin utility – unlock a user manually
         unlockUser(email) {
             const users = getUsers()
             const u = users.find(u => u.email.toLowerCase() === email.toLowerCase())
             if (u) {
                 u.locked = false
                 u.failedAttempts = 0
-                saveUsers(users)
+                saveUsers(users) // Persist the unlocked state
             }
         },
 
-        // Seed a default admin account on first app load
+        // Seed a default admin account on first app load (called by main.js)
         seedDefaultUsers() {
             const users = getUsers()
             const adminEmail = 'ndacyayisengaherve8@gmail.com'

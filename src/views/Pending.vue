@@ -2,12 +2,19 @@
 import { onMounted } from 'vue'
 import { useProductStore } from '../stores/productStore'
 
+// Access the global product store
 const store = useProductStore()
+
+// Ensure data is loaded from localStorage when the component mounts
 onMounted(() => store.loadProducts())
 
+// Utility function to format RWF currency
 function rwf(n) { return 'RWF ' + Number(n).toLocaleString() }
 
+// Move product from "Pending" to "Sold" category by marking it paid
 async function markPaid(id) { await store.payProduct(id) }
+
+// Remove product from database entirely
 async function deleteProduct(id) {
   if (confirm('Delete this product?')) await store.deleteProduct(id)
 }

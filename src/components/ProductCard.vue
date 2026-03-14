@@ -1,6 +1,7 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue'
 
+// Expects a 'product' object to be passed in from the parent component
 const props = defineProps({
   product: {
     type: Object,
@@ -8,8 +9,10 @@ const props = defineProps({
   }
 })
 
+// Declares that this component can emit a 'buy' event back up to the parent
 const emit = defineEmits(['buy'])
 
+// Local utility for formatting currency (Rwandan Francs)
 function rwf(n) {
   return 'RWF ' + Number(n).toLocaleString()
 }
@@ -18,13 +21,20 @@ function rwf(n) {
 <template>
   <article class="bg-white rounded-xl shadow border border-blue-50 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200" aria-label="Product Card">
     <!-- Image -->
-    <div class="h-40 flex items-center justify-center overflow-hidden"
+    <div class="h-48 flex items-center justify-center overflow-hidden relative group"
       style="background:linear-gradient(135deg,#eff6ff,#e0f2fe)">
-      <img v-if="product.image" :src="product.image" class="w-full h-full object-cover" :alt="product.name"/>
-      <svg v-else class="w-14 h-14 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-      </svg>
+      <img v-if="product.image" :src="product.image" 
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+        :alt="product.name"/>
+      <div v-else class="flex flex-col items-center gap-2">
+        <svg class="w-14 h-14 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        <span class="text-[10px] text-blue-300 font-medium tracking-wider uppercase">No Image</span>
+      </div>
+      <!-- Overlay gradient -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
     </div>
 
     <div class="p-4">

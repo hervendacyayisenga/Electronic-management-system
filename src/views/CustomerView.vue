@@ -5,23 +5,28 @@ import { useProductStore } from '../stores/productStore'
 import { useAuthStore } from '../stores/authStore'
 import ProductCard from '../components/ProductCard.vue'
 
+// Establish router access for logging out
 const router = useRouter()
+
+// Connect to global data stores
 const store = useProductStore()
 const authStore = useAuthStore()
 onMounted(() => store.loadProducts())
 
+// Local state for the search bar
 const search = ref('')
 
-// Payment modal state
+// Payment modal state management
 const showPayModal = ref(false)
 const selectedProduct = ref(null)
 const momoPhone = ref('')
 const phoneError = ref('')
-const payStep = ref('form')   // 'form' | 'processing' | 'success'
+const payStep = ref('form')   // Steps: 'form' | 'processing' | 'success'
 
 function rwf(n) { return 'RWF ' + Number(n).toLocaleString() }
 
-// Only show products that are NOT out of stock
+// Computed property that automatically filters the store inventory
+// It only shows products that are NOT out of stock AND match the search input query
 const available = computed(() =>
   store.products.filter(p =>
     !p.outOfStock &&
@@ -30,6 +35,7 @@ const available = computed(() =>
   )
 )
 
+// Start the checkout flow when a Buy button is clicked
 function openBuy(product) {
   selectedProduct.value = product
   momoPhone.value = ''
@@ -38,25 +44,37 @@ function openBuy(product) {
   showPayModal.value = true
 }
 
+// Safely close the modal (blocked if transaction is actively processing)
 function closeModal() {
   if (payStep.value === 'processing') return
   showPayModal.value = false
   selectedProduct.value = null
 }
 
+// Handle the mock Mobile Money (MoMo) transaction
 async function handlePay() {
   phoneError.value = ''
+  
+  // Basic Regex validation for a Rwandan phone number
   if (!/^(07[2389])\d{7}$/.test(momoPhone.value.replace(/\s/g, ''))) {
     phoneError.value = 'Enter a valid MTN/Airtel Rwanda number (e.g. 0781234567)'
     return
   }
+  
+  // Transition UI to spinning loader
   payStep.value = 'processing'
+  
+  // Simulate network request delay (2.2 seconds)
   await new Promise(r => setTimeout(r, 2200))
-  // Mark product as out-of-stock / paid
+  
+  // Transaction is complete: Tell store to mark product as out-of-stock / paid
   await store.markOutOfStock(selectedProduct.value.id)
+  
+  // Transition UI to the success receipt screen
   payStep.value = 'success'
 }
 
+// Logout and redirect to login page
 function logout() {
   authStore.logout()
   router.push({ name: 'SignIn' })
@@ -272,5 +290,11 @@ function logout() {
 <style scoped>
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
-.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 </style>

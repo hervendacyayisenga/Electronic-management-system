@@ -6,11 +6,13 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
+// Logout the admin and redirect to login
 function logout() {
   authStore.logout()
   router.push({ name: 'SignIn' })
 }
 
+// Config array generating Sidebar menu items Programmatically
 const adminNavItems = [
   {
     name: 'Dashboard',

@@ -6,12 +6,12 @@ import { useAuthStore } from '../stores/authStore'
 const router = useRouter()
 const authStore = useAuthStore()
 
-// View state: 'login' | 'register' | 'forgot'
+// View state manages which form tab is visible: 'login' | 'register' | 'forgot'
 const activeTab = ref('login')
-const loginRole = ref('customer')
+const loginRole = ref('customer') // Default radio-button selection
 const registerRole = ref('customer')
 
-// Forms
+// Forms state variables holding user input
 const loginEmail = ref('')
 const loginPassword = ref('')
 const loginLoading = ref(false)
@@ -22,56 +22,71 @@ const regPassword = ref('')
 const regConfirm = ref('')
 const regLoading = ref(false)
 
-// Forgot Password Flow
+// Forgot Password Flow state variables
 const forgotEmail = ref('')
 const forgotLoading = ref(false)
-const forgotStep = ref(1) // 1: Email, 2: Link Generated
+const forgotStep = ref(1) // 1: Waiting for Email, 2: Link Generated and Shown
 const generatedResetLink = ref('')
 
+// Password visibility toggles
 const showLoginPass = ref(false)
 const showRegPass = ref(false)
 const showRegConfirm = ref(false)
 const showNewPass = ref(false)
 
+// Clear any stale errors from previous sessions when the component mounts
 authStore.clearMessages()
 
+// Submits credentials to the store
 async function handleLogin() {
   loginLoading.value = true
-  await new Promise(r => setTimeout(r, 400))
+  await new Promise(r => setTimeout(r, 400)) // Simulate network latency
+  
   const ok = authStore.login(loginEmail.value, loginPassword.value)
+  
   loginLoading.value = false
   if (ok) {
+    // Navigate user based on their newly-authenticated role
     router.push(authStore.isAdmin ? { name: 'Dashboard' } : { name: 'CustomerView' })
   }
 }
 
+// Handles registering a new user account
 async function handleRegister() {
   authStore.clearMessages()
   if (regPassword.value !== regConfirm.value) {
     authStore.registerError = 'Passwords do not match.'
     return
   }
+  
   regLoading.value = true
-  await new Promise(r => setTimeout(r, 400))
+  await new Promise(r => setTimeout(r, 400)) // Simulate network latency
+  
   const ok = authStore.register(regName.value, regEmail.value, regPassword.value, registerRole.value)
+  
   regLoading.value = false
   if (ok) {
+    // On success, automatically switch to the login tab and prefill the email
     activeTab.value = 'login'
     loginEmail.value = regEmail.value
+    // Clear out standard registration form data
     regName.value = regEmail.value = regPassword.value = regConfirm.value = ''
   }
 }
 
+// Simulates sending a password reset string
 async function handleForgotSubmit() {
   authStore.clearMessages()
   forgotLoading.value = true
-  await new Promise(r => setTimeout(r, 600))
+  await new Promise(r => setTimeout(r, 600)) // Simulate sending email
   
   if (forgotStep.value === 1) {
+    // Call the store to generate a token string based on the email
     const token = authStore.generateResetToken(forgotEmail.value)
     if (!token) {
       authStore.loginError = 'No account found with this email.'
     } else {
+      // Create a spoofed "reset link" for the user to manually click on in this demo
       generatedResetLink.value = `${window.location.origin}/reset-password?token=${token}`
       forgotStep.value = 2
     }
@@ -79,6 +94,7 @@ async function handleForgotSubmit() {
   forgotLoading.value = false
 }
 
+// Utility to cleanly swap tabs while resetting unrelated states
 function switchTab(tab) {
   activeTab.value = tab
   forgotStep.value = 1
