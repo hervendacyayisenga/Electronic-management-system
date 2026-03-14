@@ -211,11 +211,6 @@ function switchTab(tab) {
 
             <div class="flex flex-col items-end gap-3 mt-2">
               <button @click="switchTab('forgot')" type="button" class="text-xs text-cyan-400 hover:text-cyan-300 hover:underline focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded px-1 transition-colors">Forgot password?</button>
-              
-              <button @click="loginAsAdmin" type="button" class="text-xs text-emerald-400 border border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1 transition-colors flex items-center gap-1 font-semibold group w-fit">
-                <svg class="w-3 h-3 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                Sign In As Admin
-              </button>
             </div>
           </div>
           
@@ -225,7 +220,7 @@ function switchTab(tab) {
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Sign In
+            Sign In To System
           </button>
 
           <div aria-live="polite" class="min-h-[20px]">
