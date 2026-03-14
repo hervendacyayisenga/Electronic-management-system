@@ -147,21 +147,31 @@ async function printReceipt(product) {
   <div class="min-h-screen bg-gray-50">
     <!-- Blue top bar -->
     <header class="bg-blue-600 px-6 py-4 flex items-center justify-between shadow">
-      <h1 class="text-white font-bold text-xl">Dashboard Overview</h1>
+      <h1 class="text-white font-bold text-xl">{{ authStore.isSuperAdmin ? 'Admin Control' : 'Manager Dashboard' }}</h1>
       <div class="flex items-center gap-2 text-white">
         <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
           {{ authStore.user?.name?.charAt(0)?.toUpperCase() }}
         </div>
         <span class="text-sm font-medium">{{ authStore.user?.name }}</span>
-        <span class="text-white/60 text-xs bg-white/10 px-2 py-0.5 rounded-full">Admin</span>
+        <span class="text-white/60 text-xs bg-white/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+          {{ authStore.isSuperAdmin ? 'Admin' : 'Manager' }}
+        </span>
       </div>
     </header>
 
+    <!-- Manager Unapproved Notice -->
+    <div v-if="authStore.isManager && !authStore.user?.approved" class="bg-orange-500 text-white px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      Your Product Manager account is awaiting Admin approval. You cannot add or edit items until approved.
+    </div>
+
     <div class="p-6 max-w-7xl mx-auto">
       <!-- Stat Cards -->
-      <div class="grid grid-cols-3 gap-4 mb-6">
-        <!-- Pending -->
-        <div class="rounded-xl p-5 flex items-center gap-4 text-white shadow"
+      <div class="flex gap-4 mb-6">
+        <!-- Pending (50% width) -->
+        <div class="flex-1 rounded-xl p-5 flex items-center gap-4 text-white shadow"
           style="background: linear-gradient(135deg,#f97316,#ea580c)">
           <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
             <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,8 +185,8 @@ async function printReceipt(product) {
           </div>
         </div>
 
-        <!-- Successful -->
-        <div class="rounded-xl p-5 flex items-center gap-4 text-white shadow"
+        <!-- Successful (50% width) -->
+        <div class="flex-1 rounded-xl p-5 flex items-center gap-4 text-white shadow"
           style="background: linear-gradient(135deg,#22c55e,#16a34a)">
           <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
             <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -190,8 +200,8 @@ async function printReceipt(product) {
           </div>
         </div>
 
-        <!-- Total Money -->
-        <div class="rounded-xl p-5 flex items-center gap-4 shadow bg-white border border-blue-100">
+        <!-- Total Money (SuperAdmin only) -->
+        <div v-if="authStore.isSuperAdmin" class="flex-1 rounded-xl p-5 flex items-center gap-4 shadow bg-white border border-blue-100">
           <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
             <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -213,7 +223,8 @@ async function printReceipt(product) {
             <p class="text-slate-400 text-xs mt-0.5">{{ store.products.length }} items total</p>
           </div>
           <button @click="openAdd"
-            class="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow">
+            :disabled="authStore.isManager && !authStore.user?.approved"
+            class="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow disabled:opacity-50 disabled:shadow-none">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -280,14 +291,16 @@ async function printReceipt(product) {
                       </svg>
                     </button>
                     <button @click="openEdit(product)" title="Edit"
-                      class="p-1.5 rounded-lg border border-gray-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition">
+                      :disabled="authStore.isManager && !authStore.user?.approved"
+                      class="p-1.5 rounded-lg border border-gray-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition disabled:opacity-30 disabled:hover:text-slate-500 disabled:hover:border-gray-200 disabled:hover:bg-transparent">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </button>
                     <button @click="deleteProduct(product.id)" title="Delete"
-                      class="p-1.5 rounded-lg border border-gray-200 text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition">
+                      :disabled="authStore.isManager && !authStore.user?.approved"
+                      class="p-1.5 rounded-lg border border-gray-200 text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition disabled:opacity-30 disabled:hover:text-slate-500 disabled:hover:border-gray-200 disabled:hover:bg-transparent">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -301,8 +314,8 @@ async function printReceipt(product) {
         </div>
       </div>
 
-      <!-- Revenue Summary Table -->
-      <div class="mt-8 bg-white rounded-xl shadow overflow-hidden border border-gray-100">
+      <!-- Revenue Summary Table (SuperAdmin ONLY) -->
+      <div v-if="authStore.isSuperAdmin" class="mt-8 bg-white rounded-xl shadow overflow-hidden border border-gray-100">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <div>
             <h2 class="font-bold text-slate-700 text-base">Revenue Summary</h2>

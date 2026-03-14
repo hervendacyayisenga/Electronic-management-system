@@ -8,6 +8,7 @@ import Pending from '../views/Pending.vue'
 import Successful from '../views/Successful.vue'
 import TotalMoney from '../views/TotalMoney.vue'
 import CustomerView from '../views/CustomerView.vue'
+import AccountsView from '../views/AccountsView.vue'
 
 // Define the application routes. Each route maps a URL path to a specific Vue component.
 const routes = [
@@ -31,31 +32,39 @@ const routes = [
         meta: { guest: true }
     },
 
-    // --- Admin Dashboard Routes ---
-    // These require the user to be logged in AND have the 'admin' role
+    // --- Product Manager (formerly Admin) Routes ---
+    // These require the user to be logged in AND have the 'manager' or 'superadmin' role
     {
         path: '/admin',
         name: 'Dashboard',
         component: Dashboard,
-        meta: { requiresAuth: true, role: 'admin' } 
+        meta: { requiresAuth: true, role: 'manager' } 
     },
     {
         path: '/admin/pending',
         name: 'Pending',
         component: Pending,
-        meta: { requiresAuth: true, role: 'admin' }
+        meta: { requiresAuth: true, role: 'manager' }
     },
     {
         path: '/admin/successful',
         name: 'Successful',
         component: Successful,
-        meta: { requiresAuth: true, role: 'admin' }
+        meta: { requiresAuth: true, role: 'manager' }
     },
     {
         path: '/admin/total-money',
         name: 'TotalMoney',
         component: TotalMoney,
-        meta: { requiresAuth: true, role: 'admin' }
+        meta: { requiresAuth: true, role: 'superadmin' }
+    },
+
+    // --- Super Admin restricted routes ---
+    {
+        path: '/admin/accounts',
+        name: 'Accounts',
+        component: AccountsView,
+        meta: { requiresAuth: true, role: 'superadmin' }
     },
 
     // --- Customer Routes ---
@@ -84,13 +93,15 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     // Access the authentication state from Pinia
     const authStore = useAuthStore()
-    const { isAuthenticated, isAdmin, isCustomer } = authStore
+    const { isAuthenticated, isSuperAdmin, isManager, isCustomer } = authStore
 
     // 1. Prevent logged-in users from accessing guest pages (like Login)
     if (to.meta.guest) {
         if (isAuthenticated) {
             // Redirect based on role
-            next(isAdmin ? { name: 'Dashboard' } : { name: 'CustomerView' })
+            if (isSuperAdmin) next({ name: 'Accounts' })
+            else if (isManager) next({ name: 'Dashboard' })
+            else next({ name: 'CustomerView' })
         } else {
             next() // Proceed naturally if not logged in
         }
@@ -103,15 +114,23 @@ router.beforeEach((to, from, next) => {
         return
     }
 
-    // 3. Prevent non-admins from accessing admin-only pages
-    if (to.meta.role === 'admin' && !isAdmin) {
+    // 3. SuperAdmin exclusive routes
+    if (to.meta.role === 'superadmin' && !isSuperAdmin) {
+        next(isManager ? { name: 'Dashboard' } : { name: 'CustomerView' })
+        return
+    }
+
+    // 4. Product Manager (or SuperAdmin) routes
+    if (to.meta.role === 'manager' && (!isManager && !isSuperAdmin)) {
         next(isCustomer ? { name: 'CustomerView' } : { name: 'SignIn' })
         return
     }
 
-    // 4. Prevent non-customers from accessing customer-only pages
+    // 5. Prevent non-customers from accessing customer-only pages
     if (to.meta.role === 'customer' && !isCustomer) {
-        next(isAdmin ? { name: 'Dashboard' } : { name: 'SignIn' })
+        if (isSuperAdmin) next({ name: 'Accounts' })
+        else if (isManager) next({ name: 'Dashboard' })
+        else next({ name: 'SignIn' })
         return
     }
 

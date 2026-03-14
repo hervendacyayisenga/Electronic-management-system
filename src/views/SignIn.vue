@@ -179,7 +179,7 @@ function switchTab(tab) {
               <button type="button" @click="loginRole = 'admin'"
                 :aria-pressed="loginRole === 'admin'"
                 :class="loginRole === 'admin' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'"
-                class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Admin</button>
+                class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Product Manager</button>
             </fieldset>
 
             <div>
@@ -274,7 +274,7 @@ function switchTab(tab) {
             <button type="button" @click="registerRole = 'admin'"
               :aria-pressed="registerRole === 'admin'"
               :class="registerRole === 'admin' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'"
-              class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Admin</button>
+              class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Product Manager</button>
           </fieldset>
 
           <div>

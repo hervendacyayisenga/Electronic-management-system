@@ -12,12 +12,12 @@ function logout() {
   router.push({ name: 'SignIn' })
 }
 
-// Config array generating Sidebar menu items Programmatically
-const adminNavItems = [
+// Config array generating Sidebar menu items Programmatically for Managers
+const managerNavItems = [
   {
     name: 'Dashboard',
     to: { name: 'Dashboard' },
-    label: 'Dashboard',
+    label: 'Inventory',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>`
   },
   {
@@ -51,13 +51,32 @@ const adminNavItems = [
       <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
       </svg>
-      <span class="text-white font-bold text-sm">Dashboard</span>
+      <span class="text-white font-bold text-sm">{{ authStore.isSuperAdmin ? 'Admin Control' : 'Manager Board' }}</span>
     </div>
 
     <!-- Nav -->
     <nav class="flex-1 py-4 space-y-1 px-3">
+
+      <!-- Super Admin specific paths -->
       <router-link
-        v-for="item in adminNavItems"
+        v-if="authStore.isSuperAdmin"
+        :to="{ name: 'Accounts' }"
+        class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-blue-200 hover:bg-white/10 hover:text-white"
+        :class="route.name === 'Accounts' ? 'bg-white/20 text-white' : ''"
+      >
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        Account Approvals
+      </router-link>
+
+      <div v-if="authStore.isSuperAdmin" class="py-2">
+        <div class="h-px bg-white/10 w-full mb-2"></div>
+      </div>
+
+      <!-- Shared/Manager paths -->
+      <router-link
+        v-for="item in managerNavItems"
         :key="item.name"
         :to="item.to"
         class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
@@ -76,17 +95,19 @@ const adminNavItems = [
         {{ item.label }}
       </router-link>
 
-      <!-- Total Money link -->
+      <!-- Total Money link (SuperAdmin only) -->
       <router-link
-        :to="{ name: 'Successful' }"
+        v-if="authStore.isSuperAdmin"
+        :to="{ name: 'TotalMoney' }"
         class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-blue-200 hover:bg-white/10 hover:text-white"
+        :class="route.name === 'TotalMoney' ? 'bg-white/20 text-white' : ''"
       >
         <span class="w-3 h-3 rounded-full bg-green-400 flex-shrink-0 flex items-center justify-center">
           <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 8 8">
             <path d="M6.41 1L3 4.41 1.59 3 0 4.59l3 3L8 2.59z"/>
           </svg>
         </span>
-        Total Money
+        Total Revenue
       </router-link>
     </nav>
 
@@ -94,7 +115,7 @@ const adminNavItems = [
     <div class="border-t border-blue-600 p-3">
       <div class="px-2 pb-2">
         <p class="text-blue-200 text-xs truncate">{{ authStore.user?.name }}</p>
-        <p class="text-blue-300/60 text-xs truncate">{{ authStore.user?.role }}</p>
+        <p class="text-blue-300/60 text-xs truncate uppercase font-bold tracking-wider">{{ authStore.user?.role === 'manager' ? 'Product Manager' : authStore.user?.role }}</p>
       </div>
       <button
         @click="logout"

@@ -27,7 +27,8 @@ export const useAuthStore = defineStore('auth', {
 
     getters: {
         // Quick boolean checks for the current user's role and authentication status
-        isAdmin: (state) => state.user?.role === 'admin',
+        isSuperAdmin: (state) => state.user?.role === 'superadmin',
+        isManager: (state) => state.user?.role === 'manager', // Previously called admin
         isCustomer: (state) => state.user?.role === 'customer',
         isAuthenticated: (state) => !!state.user
     },
@@ -73,9 +74,12 @@ export const useAuthStore = defineStore('auth', {
                 name: name.trim(),
                 email: email.toLowerCase().trim(),
                 password,
-                role,
+                // Replace 'admin' with 'manager' during transition
+                role: role === 'admin' ? 'manager' : role,
                 failedAttempts: 0,
-                locked: false
+                locked: false,
+                // Product Managers need superadmin approval before editing/adding products
+                approved: role === 'admin' || role === 'manager' ? false : true
             }
             users.push(newUser)
             saveUsers(users)
@@ -168,7 +172,13 @@ export const useAuthStore = defineStore('auth', {
             
             localStorage.removeItem('ems_mfa_pending')
 
-            const sessionUser = { id: user.id, name: user.name, email: user.email, role: user.role }
+            const sessionUser = { 
+                id: user.id, 
+                name: user.name, 
+                email: user.email, 
+                role: user.role,
+                approved: user.approved
+            }
             this.user = sessionUser
             localStorage.setItem('ems_current_user', JSON.stringify(sessionUser))
             return true
@@ -195,19 +205,40 @@ export const useAuthStore = defineStore('auth', {
         // Seed a default admin account on first app load (called by main.js)
         seedDefaultUsers() {
             const users = getUsers()
-            const adminEmail = 'ndacyayisengaherve8@gmail.com'
+            const adminEmail = 'adminems@gmail.com'
             const exists = users.find(u => u.email.toLowerCase() === adminEmail)
             if (!exists) {
                 users.push({
-                    id: 9001,
-                    name: 'Herve Ndacyayisenga',
+                    id: 9999,
+                    name: 'Super Admin',
                     email: adminEmail,
-                    password: '0987654321',
-                    role: 'admin',
+                    password: 'WebTech123@',
+                    role: 'superadmin',
                     failedAttempts: 0,
-                    locked: false
+                    locked: false,
+                    approved: true
                 })
                 saveUsers(users)
+            }
+        },
+
+        // Get all users for the Accounts Dashboard (Admin only)
+        getAllUsers() {
+            return getUsers()
+        },
+
+        // Toggle the approval status of a Product Manager (Admin only)
+        toggleManagerApproval(email) {
+            const users = getUsers()
+            const u = users.find(u => u.email.toLowerCase() === email.toLowerCase())
+            if (u && u.role === 'manager') {
+                u.approved = !u.approved
+                saveUsers(users)
+                // If it's the currently logged-in user, update session
+                if (this.user && this.user.email === u.email) {
+                    this.user.approved = u.approved
+                    localStorage.setItem('ems_current_user', JSON.stringify(this.user))
+                }
             }
         },
 
