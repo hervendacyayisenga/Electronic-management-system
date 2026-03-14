@@ -19,26 +19,26 @@ function rwf(n) {
 </script>
 
 <template>
-  <article class="bg-white rounded-xl shadow border border-blue-50 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200" aria-label="Product Card">
+  <article class="bg-emerald-900/40 rounded-xl shadow border border-emerald-800/50 overflow-hidden hover:shadow-lg hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-200" aria-label="Product Card">
     <!-- Image -->
     <div class="h-48 flex items-center justify-center overflow-hidden relative group"
-      style="background:linear-gradient(135deg,#eff6ff,#e0f2fe)">
+      style="background:linear-gradient(135deg,#064e3b,#022c22)">
       <img :src="product.image || 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800'" 
         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
         :alt="product.name || 'Electronic device'"/>
       <!-- Overlay gradient -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
     </div>
 
     <div class="p-4">
-      <span class="bg-green-100 text-green-700 border border-green-200 text-xs px-2 py-0.5 rounded-full font-semibold">✓ Available</span>
-      <h3 class="font-bold text-slate-700 truncate text-sm mt-2">{{ product.name }}</h3>
-      <p class="text-slate-400 text-xs mt-0.5 line-clamp-2">{{ product.description || 'No description' }}</p>
+      <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2 py-0.5 rounded-full font-semibold">✓ Available</span>
+      <h3 class="font-bold text-white truncate text-sm mt-2">{{ product.name }}</h3>
+      <p class="text-emerald-100/60 text-xs mt-0.5 line-clamp-2">{{ product.description || 'No description' }}</p>
 
       <div class="flex items-center justify-between mt-3">
         <div>
-          <p class="text-blue-700 font-extrabold text-base">{{ rwf(product.price) }}</p>
-          <p class="text-slate-400 text-xs">{{ product.quantity }} in stock</p>
+          <p class="text-emerald-400 font-extrabold text-base">{{ rwf(product.price) }}</p>
+          <p class="text-emerald-500/80 text-xs">{{ product.quantity }} in stock</p>
         </div>
         <!-- BUY button -->
         <button @click="emit('buy', product)"

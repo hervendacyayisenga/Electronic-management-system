@@ -1,12 +1,20 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProductStore } from '../stores/productStore'
 import { useAuthStore } from '../stores/authStore'
 import html2pdf from 'html2pdf.js'
 
 // Connect to global stores
+const router = useRouter()
 const store = useProductStore()
 const authStore = useAuthStore()
+
+// Logout and redirect to login page
+function logout() {
+  authStore.logout()
+  router.push({ name: 'SignIn' })
+}
 
 // Load inventory from localStorage when the dashboard opens
 onMounted(() => store.loadProducts())
@@ -153,18 +161,26 @@ async function printReceipt(product) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Blue top bar -->
-    <header class="bg-blue-600 px-6 py-4 flex items-center justify-between shadow">
+  <div class="min-h-screen" style="background:#022c22;">
+    <!-- Dark Green top bar text-emerald-100 -->
+    <header class="px-6 py-4 flex items-center justify-between shadow border-b border-emerald-800/50" style="background:linear-gradient(135deg,#064e3b,#047857);">
       <h1 class="text-white font-bold text-xl">{{ authStore.isSuperAdmin ? 'Admin Control' : 'Manager Dashboard' }}</h1>
-      <div class="flex items-center gap-2 text-white">
-        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
-          {{ authStore.user?.name?.charAt(0)?.toUpperCase() }}
+      <div class="flex items-center gap-4 text-white">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm shadow">
+            {{ authStore.user?.name?.charAt(0)?.toUpperCase() }}
+          </div>
+          <span class="text-sm font-medium">{{ authStore.user?.name }}</span>
+          <span class="text-emerald-200/80 text-xs bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+            {{ authStore.isSuperAdmin ? 'Admin' : 'Manager' }}
+          </span>
         </div>
-        <span class="text-sm font-medium">{{ authStore.user?.name }}</span>
-        <span class="text-white/60 text-xs bg-white/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
-          {{ authStore.isSuperAdmin ? 'Admin' : 'Manager' }}
-        </span>
+        <button @click="logout" aria-label="Logout" class="flex items-center gap-1.5 text-sm font-medium text-emerald-200 hover:text-white transition bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+          </svg>
+          <span class="hidden sm:inline">Logout</span>
+        </button>
       </div>
     </header>
 
@@ -210,37 +226,37 @@ async function printReceipt(product) {
         </div>
 
         <!-- Total Money (SuperAdmin only) -->
-        <div v-if="authStore.isSuperAdmin" class="flex-1 rounded-xl p-5 flex items-center gap-4 shadow bg-white border border-blue-100">
-          <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+        <div v-if="authStore.isSuperAdmin" class="flex-1 rounded-xl p-5 flex items-center gap-4 shadow bg-emerald-900/40 border border-emerald-800/50">
+          <div class="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
             <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
           <div>
-            <p class="text-slate-500 text-sm font-medium">Total Revenue</p>
-            <p class="text-lg font-bold text-slate-700">{{ rwf(store.totalMoney) }}</p>
+            <p class="text-emerald-100/70 text-sm font-medium">Total Revenue</p>
+            <p class="text-lg font-bold text-white">{{ rwf(store.totalMoney) }}</p>
           </div>
         </div>
       </div>
 
       <!-- Products Table -->
-      <div class="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div class="bg-emerald-900/40 rounded-xl shadow overflow-hidden border border-emerald-800/50">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-emerald-800/50">
           <div>
             <div class="flex items-center gap-3">
-              <h2 class="font-bold text-slate-700 text-base">Products</h2>
-              <div class="flex bg-gray-100 p-1 rounded-lg">
-                <button @click="activeFilter = 'all'" :class="activeFilter === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">All</button>
-                <button @click="activeFilter = 'pending'" :class="activeFilter === 'pending' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">Pending</button>
-                <button @click="activeFilter = 'sold'" :class="activeFilter === 'sold' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">Sold</button>
+              <h2 class="font-bold text-white text-base">Products</h2>
+              <div class="flex bg-black/20 p-1 rounded-lg border border-white/5">
+                <button @click="activeFilter = 'all'" :class="activeFilter === 'all' ? 'bg-emerald-800 text-white shadow-sm' : 'text-emerald-100/70 hover:text-white'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">All</button>
+                <button @click="activeFilter = 'pending'" :class="activeFilter === 'pending' ? 'bg-orange-600 text-white shadow-sm' : 'text-emerald-100/70 hover:text-white'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">Pending</button>
+                <button @click="activeFilter = 'sold'" :class="activeFilter === 'sold' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-100/70 hover:text-white'" class="px-3 py-1 text-xs font-semibold rounded-md transition-all">Sold</button>
               </div>
             </div>
-            <p class="text-slate-400 text-xs mt-1">{{ filteredProducts.length }} items shown</p>
+            <p class="text-emerald-500/80 text-xs mt-1">{{ filteredProducts.length }} items shown</p>
           </div>
           <button @click="openAdd"
             :disabled="authStore.isManager && !authStore.user?.approved"
-            class="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow disabled:opacity-50 disabled:shadow-none">
+            class="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition shadow disabled:opacity-50 disabled:shadow-none">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -255,7 +271,7 @@ async function printReceipt(product) {
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="text-left text-slate-500 bg-gray-50 border-b border-gray-100">
+              <tr class="text-left text-emerald-100/70 bg-black/10 border-b border-emerald-800/50">
                 <th class="px-5 py-3 font-medium">Image</th>
                 <th class="px-5 py-3 font-medium">Name</th>
                 <th class="px-5 py-3 font-medium">Description</th>
@@ -265,19 +281,19 @@ async function printReceipt(product) {
                 <th class="px-5 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-gray-50 transition">
+            <tbody class="divide-y divide-emerald-800/50">
+              <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-white/5 transition">
                 <td class="px-5 py-3">
-                  <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center">
+                  <div class="w-12 h-12 rounded-lg bg-black/20 overflow-hidden border border-emerald-800/50 flex items-center justify-center">
                     <img :src="product.image || 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800'" class="w-full h-full object-cover" :alt="product.name || 'Electronic item'"/>
                   </div>
                 </td>
-                <td class="px-5 py-3 font-semibold text-slate-700">{{ product.name }}</td>
-                <td class="px-5 py-3 text-slate-500 max-w-[200px]">
+                <td class="px-5 py-3 font-semibold text-white">{{ product.name }}</td>
+                <td class="px-5 py-3 text-emerald-100/70 max-w-[200px]">
                   <span class="line-clamp-2">{{ product.description || '—' }}</span>
                 </td>
-                <td class="px-5 py-3 text-slate-600">{{ product.quantity }}</td>
-                <td class="px-5 py-3 font-medium text-slate-700">{{ rwf(product.price) }}</td>
+                <td class="px-5 py-3 text-emerald-500/80">{{ product.quantity }}</td>
+                <td class="px-5 py-3 font-medium text-white">{{ rwf(product.price) }}</td>
                 <td class="px-5 py-3">
                   <span v-if="product.outOfStock"
                     class="bg-red-100 text-red-700 border border-red-300 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap">

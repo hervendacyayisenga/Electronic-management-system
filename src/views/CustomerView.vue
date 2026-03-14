@@ -82,10 +82,10 @@ function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background:#f0f4ff;">
+  <div class="min-h-screen" style="background:#022c22;">
     <!-- Header -->
-    <header class="px-6 py-4 flex items-center justify-between shadow sticky top-0 z-30"
-      style="background:linear-gradient(135deg,#1e40af,#0891b2);">
+    <header class="px-6 py-4 flex items-center justify-between shadow sticky top-0 z-30 border-b border-emerald-800/50"
+      style="background:linear-gradient(135deg,#064e3b,#047857);">
       <div class="flex items-center gap-3">
         <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -93,17 +93,17 @@ function logout() {
         </svg>
         <div>
           <h1 class="text-white font-bold text-lg leading-tight">EMS Shop</h1>
-          <p class="text-blue-200 text-xs">Electronic Management System</p>
+          <p class="text-emerald-200 text-xs">Electronic Management System</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-full bg-cyan-400 flex items-center justify-center font-bold text-blue-900 text-sm">
+          <div class="w-8 h-8 rounded-full bg-emerald-400 flex items-center justify-center font-bold text-emerald-900 text-sm">
             {{ authStore.user?.name?.charAt(0)?.toUpperCase() }}
           </div>
           <div class="hidden sm:block">
             <p class="text-white text-xs font-medium leading-tight">{{ authStore.user?.name }}</p>
-            <p class="text-blue-200 text-xs">Customer</p>
+            <p class="text-emerald-200 text-xs shadow-sm bg-black/10 px-2 rounded-full mt-0.5">Customer</p>
           </div>
         </div>
         <button @click="logout" class="text-white/70 hover:text-white text-sm flex items-center gap-1 transition">
@@ -117,26 +117,26 @@ function logout() {
     </header>
 
     <!-- Welcome bar -->
-    <div class="bg-white border-b border-blue-100 px-6 py-3 flex items-center justify-between">
-      <p class="text-slate-500 text-sm">
-        Welcome, <span class="font-semibold text-blue-700">{{ authStore.user?.name }}</span>!
-        <span class="text-slate-400 ml-1">{{ available.length }} product{{ available.length !== 1 ? 's' : '' }} available</span>
+    <div class="bg-emerald-900/40 border-b border-emerald-800/50 px-6 py-3 flex items-center justify-between">
+      <p class="text-emerald-100/70 text-sm">
+        Welcome, <span class="font-semibold text-white">{{ authStore.user?.name }}</span>!
+        <span class="text-emerald-500/80 ml-1">{{ available.length }} product{{ available.length !== 1 ? 's' : '' }} available</span>
       </p>
     </div>
 
     <main class="p-6 max-w-7xl mx-auto">
       <!-- Search -->
       <div class="relative mb-6">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
         <input v-model="search" type="text" placeholder="Search electronics…" aria-label="Search electronics"
-          class="w-full pl-9 pr-4 py-3 bg-white border border-blue-100 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          class="w-full pl-9 pr-4 py-3 bg-emerald-900/30 border border-emerald-500/20 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-emerald-50 placeholder-emerald-100/40 transition"/>
       </div>
 
       <!-- Empty state -->
       <div v-if="available.length === 0"
-        class="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow text-slate-400 border border-blue-100">
+        class="flex flex-col items-center justify-center py-16 bg-emerald-900/20 rounded-xl shadow text-emerald-500/50 border border-emerald-800/30">
         <svg class="w-10 h-10 mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
