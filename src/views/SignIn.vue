@@ -16,6 +16,11 @@ const loginEmail = ref('')
 const loginPassword = ref('')
 const loginLoading = ref(false)
 
+// MFA state variables
+const mfaStep = ref(false)
+const mfaOtp = ref('')
+const mfaSimulatedOTP = ref('')
+
 const regName = ref('')
 const regEmail = ref('')
 const regPassword = ref('')
@@ -42,11 +47,28 @@ async function handleLogin() {
   loginLoading.value = true
   await new Promise(r => setTimeout(r, 400)) // Simulate network latency
   
-  const ok = authStore.login(loginEmail.value, loginPassword.value)
+  const result = authStore.login(loginEmail.value, loginPassword.value)
   
   loginLoading.value = false
+  if (result && result.requiresMFA) {
+    // Show MFA Step and the simulated OTP
+    mfaStep.value = true
+    mfaSimulatedOTP.value = result.simulatedOTP
+  } else if (result === true) {
+    // Navigate user based on their newly-authenticated role (fallback)
+    router.push(authStore.isAdmin ? { name: 'Dashboard' } : { name: 'CustomerView' })
+  }
+}
+
+// Verifies the OTP and finishes the login process
+async function handleVerifyOTP() {
+  authStore.clearMessages()
+  loginLoading.value = true
+  await new Promise(r => setTimeout(r, 400)) // Simulate network latency
+
+  const ok = authStore.verifyOTP(loginEmail.value, mfaOtp.value)
+  loginLoading.value = false
   if (ok) {
-    // Navigate user based on their newly-authenticated role
     router.push(authStore.isAdmin ? { name: 'Dashboard' } : { name: 'CustomerView' })
   }
 }
@@ -98,6 +120,8 @@ async function handleForgotSubmit() {
 function switchTab(tab) {
   activeTab.value = tab
   forgotStep.value = 1
+  mfaStep.value = false
+  mfaOtp.value = ''
   generatedResetLink.value = ''
   authStore.clearMessages()
 }
@@ -144,54 +168,82 @@ function switchTab(tab) {
         </div>
 
         <!-- LOGIN FORM -->
-        <form v-if="activeTab === 'login'" aria-label="Login Form" @submit.prevent="handleLogin" class="px-6 py-6 space-y-5">
-          <fieldset class="flex gap-3 border-none p-0 m-0 w-full" aria-label="Select Role">
-            <button type="button" @click="loginRole = 'customer'"
-              :aria-pressed="loginRole === 'customer'"
-              :class="loginRole === 'customer' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'"
-              class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Customer</button>
-            <button type="button" @click="loginRole = 'admin'"
-              :aria-pressed="loginRole === 'admin'"
-              :class="loginRole === 'admin' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'"
-              class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Admin</button>
-          </fieldset>
+        <form v-if="activeTab === 'login'" aria-label="Login Form" @submit.prevent="mfaStep ? handleVerifyOTP() : handleLogin()" class="px-6 py-6 space-y-5">
+          
+          <div v-if="!mfaStep" class="space-y-5">
+            <fieldset class="flex gap-3 border-none p-0 m-0 w-full" aria-label="Select Role">
+              <button type="button" @click="loginRole = 'customer'"
+                :aria-pressed="loginRole === 'customer'"
+                :class="loginRole === 'customer' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'"
+                class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Customer</button>
+              <button type="button" @click="loginRole = 'admin'"
+                :aria-pressed="loginRole === 'admin'"
+                :class="loginRole === 'admin' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'"
+                class="flex-1 py-2 rounded-lg text-sm font-medium transition border focus:outline-none focus:ring-2 focus:ring-cyan-500">Admin</button>
+            </fieldset>
 
-          <div>
-            <label for="loginEmail" class="sr-only">Email address</label>
-            <div class="relative group">
-              <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 group-focus-within:text-cyan-400 transition-colors" aria-hidden="true">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor font-medium">
+            <div>
+              <label for="loginEmail" class="sr-only">Email address</label>
+              <div class="relative group">
+                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 group-focus-within:text-cyan-400 transition-colors" aria-hidden="true">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor font-medium">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </span>
+                <input id="loginEmail" v-model="loginEmail" type="email" placeholder="Email address" required
+                  class="w-full pl-9 pr-4 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"/>
+              </div>
+            </div>
+
+            <div>
+              <label for="loginPassword" class="sr-only">Password</label>
+              <div class="relative group">
+                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 group-focus-within:text-cyan-400 transition-colors" aria-hidden="true">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </span>
+                <input id="loginPassword" v-model="loginPassword" :type="showLoginPass ? 'text' : 'password'" placeholder="Password" required
+                  class="w-full pl-9 pr-10 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"/>
+                <button type="button" @click="showLoginPass = !showLoginPass" :aria-label="showLoginPass ? 'Hide password' : 'Show password'" class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-white focus:outline-none focus:text-cyan-400 focus:ring-2 focus:ring-cyan-500 rounded-md transition-colors">
+                  <svg v-if="!showLoginPass" class="w-4 h-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg v-else class="w-4 h-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-8 0-1.09.252-2.124.7-3.05M6.34 6.34A9.956 9.956 0 0112 5c5.523 0 10 4.477 10 8 0 1.347-.328 2.617-.912 3.737M3 3l18 18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button @click="switchTab('forgot')" type="button" class="text-xs text-cyan-400 hover:text-cyan-300 hover:underline focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded px-1 transition-colors">Forgot password?</button>
+            </div>
+          </div>
+          
+          <!-- MFA Step Section -->
+          <div v-else class="space-y-5">
+            <div class="bg-cyan-900/40 border border-cyan-500/30 text-cyan-200 p-5 rounded-xl text-sm backdrop-blur-md">
+              <p class="font-bold mb-2 flex items-center gap-2 text-cyan-400">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
-              </span>
-              <input id="loginEmail" v-model="loginEmail" type="email" placeholder="Email address" required
-                class="w-full pl-9 pr-4 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"/>
+                Two-Factor Authentication
+              </p>
+              <p class="text-cyan-100/70 mb-3">An email with a secure One-Time Password has been dispatched to <strong>{{ loginEmail }}</strong>.</p>
+              <div class="bg-black/30 w-full p-2 text-center rounded-lg border border-cyan-500/20">
+                <span class="text-xs text-cyan-400 uppercase tracking-widest block mb-1">Simulated OTP Delivery:</span>
+                <strong class="text-white text-2xl tracking-[0.2em] font-mono">{{ mfaSimulatedOTP }}</strong>
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label for="loginPassword" class="sr-only">Password</label>
-            <div class="relative group">
-              <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 group-focus-within:text-cyan-400 transition-colors" aria-hidden="true">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
-              </span>
-              <input id="loginPassword" v-model="loginPassword" :type="showLoginPass ? 'text' : 'password'" placeholder="Password" required
-                class="w-full pl-9 pr-10 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"/>
-              <button type="button" @click="showLoginPass = !showLoginPass" :aria-label="showLoginPass ? 'Hide password' : 'Show password'" class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-white focus:outline-none focus:text-cyan-400 focus:ring-2 focus:ring-cyan-500 rounded-md transition-colors">
-                <svg v-if="!showLoginPass" class="w-4 h-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-                <svg v-else class="w-4 h-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-8 0-1.09.252-2.124.7-3.05M6.34 6.34A9.956 9.956 0 0112 5c5.523 0 10 4.477 10 8 0 1.347-.328 2.617-.912 3.737M3 3l18 18"/>
-                </svg>
-              </button>
+            
+            <div>
+              <label for="mfaOtp" class="sr-only">Enter OTP</label>
+              <div class="relative group">
+                <input id="mfaOtp" v-model="mfaOtp" type="text" placeholder="Enter 6-digit OTP" required maxlength="6"
+                  class="w-full px-4 py-3 bg-[#0B0F19]/60 border border-white/10 rounded-lg text-center text-xl tracking-widest text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all font-mono"/>
+              </div>
             </div>
-          </div>
-
-          <div class="flex justify-end">
-            <button @click="switchTab('forgot')" type="button" class="text-xs text-cyan-400 hover:text-cyan-300 hover:underline focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded px-1 transition-colors">Forgot password?</button>
           </div>
 
           <div aria-live="polite" class="min-h-[20px]">
@@ -202,7 +254,13 @@ function switchTab(tab) {
           <button type="submit" :disabled="loginLoading"
             :aria-busy="loginLoading"
             class="w-full py-3 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] disabled:opacity-50 disabled:shadow-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0B0F19]">
-            {{ loginLoading ? 'Authenticating...' : 'Sign In To System' }}
+            <span v-if="loginLoading">Authenticating...</span>
+            <span v-else-if="mfaStep">Verify Secure OTP</span>
+            <span v-else>Sign In To System</span>
+          </button>
+          
+          <button v-if="mfaStep" type="button" @click="mfaStep = false; mfaOtp = ''; authStore.clearMessages()" class="mt-4 w-full py-2 bg-transparent text-slate-400 hover:text-slate-200 text-sm font-semibold transition-colors focus:outline-none">
+            Back to Application Login
           </button>
         </form>
 
