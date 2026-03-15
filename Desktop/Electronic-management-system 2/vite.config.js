@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
-    base: '/24768-midterm-bank/',
+    base: '/Electronic-management-system/',
     plugins: [vue()],
     resolve: {
         alias: {
